@@ -28,4 +28,15 @@ const insertQuery = async (text, params) => {
     }
   };
 
+  const simpleQuery = async (text, params) => {
+    try {
+      const result = await pool.query(text, params);
+      return result;
+    } catch (error) {
+      console.error('Error executing simple query:', error);
+      throw error;
+    }
+  };
+
+
 module.exports = { pool, insertQuery };
