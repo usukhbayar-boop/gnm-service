@@ -7,7 +7,7 @@ const router = express.Router();
 // router.get('/', getAllUsers);
 router.post('/login', login);
 router.post('/add', addAdmin);
-router.post('/update', updateAdmin);
-router.post('/remove', removeAdmin);
+router.post('/update/:id', updateAdmin);
+router.post('/remove/:id', removeAdmin);
 
 module.exports = router;

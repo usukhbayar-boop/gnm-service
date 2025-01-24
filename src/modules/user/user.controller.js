@@ -46,11 +46,10 @@ exports.addAdmin = async (req, res) => {  // ✅ Ensure functions exist
     const hashedPassword = await bcrypt.hash(password, 10);
   
     try {
-      await pool.query("UPDATE admins SET username = $1, hashed_password = $2, first_name = $3, last_name = $4, email = $5, phone = $6 WHERE id = $3 AND role = 'admin'", [
+      await pool.query("UPDATE admins SET username = $1, hashed_password = $2, first_name = $3, last_name = $4, email = $5, phone = $6 WHERE id = $7 AND role = 'admin'", [
         username,
         hashedPassword,
-        id,
-        first_name, last_name, email, phone
+        first_name, last_name, email, phone, id
       ]);
       res.json({ message: "Admin updated successfully" });
     } catch (error) {
