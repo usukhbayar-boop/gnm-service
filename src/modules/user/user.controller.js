@@ -14,7 +14,7 @@ exports.login = async (req, res) => {  // ✅ Ensure function exists
       if (!passwordMatch) return res.status(400).json({ message: "Invalid credentials" });
   
       const token = generateToken(user);
-      res.json({ token, username: user.username, email: user.email, phone: user.phone, last_name: user.last_name, first_name: user.first_name});
+      res.json({ token, id: user.id, username: user.username, email: user.email, phone: user.phone, last_name: user.last_name, first_name: user.first_name});
     } catch (error) {
       res.status(500).json({ message: error.message });
     }
