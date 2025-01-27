@@ -1,4 +1,5 @@
 const axios = require('axios');
+const { randomUUID } = require("crypto")
 const { insertQuery, pool } = require('../../config/db');
 
 exports.createCampaignOrder = async (req, res) => {
@@ -11,14 +12,14 @@ exports.createCampaignOrder = async (req, res) => {
 
   try {
     const insertSQL = 'INSERT INTO campaign_orders (first_name, last_name, phone, campaign_id, payment_status, total_amount, description) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *';
-    await insertQuery(insertSQL, [first_name, last_name, phone, campaign_id, payment_status, total_amount, description]);
+    const campaign = await insertQuery(insertSQL, [first_name, last_name, phone, campaign_id, payment_status, total_amount, description]);
 
-    const auth_response = await axios.post('https://merchant-sandbox.qpay.mn/v2/auth/token', 
+    const auth_response = await axios.post('https://merchant.qpay.mn/v2/auth/token', 
         {}, // Request body
         {
           auth: {
-            username: 'TEST_MERCHANT',
-            password: '123456',
+            username: 'GOOD_NEIGHBORS',
+            password: 'eSkFT03t',
           },
           headers: {
             'Content-Type': 'application/json',
@@ -27,12 +28,14 @@ exports.createCampaignOrder = async (req, res) => {
       );
     const access_token = auth_response.data.access_token;
 
+    const reciever_code = randomUUID();
+
     const data = {
-            invoice_code: "TEST_INVOICE",
-            sender_invoice_no: "123455678",
-            invoice_receiver_code: "83",
+            invoice_code: "GOOD_NEIGHBORS_INVOICE",
+            sender_invoice_no: campaign.rows[0].id.toString(),
+            invoice_receiver_code: reciever_code.toString(),
             sender_branch_code:"BRANCH1",
-            invoice_description: "Order No1311 200.00",
+            invoice_description: `Campaign ${campaign.rows[0].id}`,
             enable_expiry:"false",
             allow_partial: false,
             minimum_amount: null,
@@ -82,7 +85,7 @@ exports.createCampaignOrder = async (req, res) => {
                 }
             ]
     }
-    const invoice = await axios.post('https://merchant-sandbox.qpay.mn/v2/invoice', 
+    const invoice = await axios.post('https://merchant.qpay.mn/v2/invoice', 
         data, // Request body
         {
           headers: {
@@ -113,7 +116,7 @@ exports.createCampaignOrder = async (req, res) => {
       data: invoice.data
     });
   } catch (error) {
-    res.status(500).json({ error: 'Database error' });
+    res.status(500).json({ error: 'Database error', msg: error });
   }
 };
 
@@ -124,12 +127,12 @@ exports.checkInvoice = async (req, res) => {
     const result = await pool.query(`SELECT * FROM bills WHERE id=${bill_id}`);
 
     if(result && result.rows.length > 0) {
-        const auth_response = await axios.post('https://merchant-sandbox.qpay.mn/v2/auth/token', 
+        const auth_response = await axios.post('https://merchant.qpay.mn/v2/auth/token', 
             {}, // Request body
             {
               auth: {
-                username: 'TEST_MERCHANT',
-                password: '123456',
+                username: 'GOOD_NEIGHBORS',
+                password: 'eSkFT03t',
               },
               headers: {
                 'Content-Type': 'application/json',
@@ -137,7 +140,7 @@ exports.checkInvoice = async (req, res) => {
             }
           );
 
-        const check_invoice = await axios.post('https://merchant-sandbox.qpay.mn/v2/payment/check', 
+        const check_invoice = await axios.post('https://merchant.qpay.mn/v2/payment/check', 
             {
                 object_type: "INVOICE",
                 object_id: result.rows[0].invoiceno,
