@@ -49,8 +49,8 @@ exports.hookHandler = async (bill_id) => {
                 'paid',
                 bill_id
               ]);
+              console.log(bill.campaign_order_id);
               await pool.query("UPDATE campaign_orders SET payment_status = 'paid' WHERE id = $1", [
-                'paid',
                 bill.campaign_order_id
               ]);
             }
