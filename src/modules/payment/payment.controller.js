@@ -13,7 +13,7 @@ exports.createCampaignOrder = async (req, res) => {
 
   try {
     const insertSQL = 'INSERT INTO campaign_orders (first_name, last_name, phone, campaign_id, payment_status, total_amount, description, email) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *';
-    const campaign = await insertQuery(insertSQL, [first_name, last_name, phone, campaign_id, payment_status, total_amount, description, email]);
+    const campaign_order = await insertQuery(insertSQL, [first_name, last_name, phone, campaign_id, payment_status, total_amount, description, email]);
 
     const billDetail = {
       provider: 'qpay',
@@ -24,10 +24,9 @@ exports.createCampaignOrder = async (req, res) => {
       bill_type: 'campaign'
   }
 
-  const insertBill = 'INSERT INTO bills (provider, campaign_id, amount, status, user_id, bill_type) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *';
-  const bill = await insertQuery(insertBill, [billDetail.provider, billDetail.campaign_id, billDetail.amount, billDetail.status, billDetail.user_id, billDetail.bill_type]);
+  const insertBill = 'INSERT INTO bills (provider, campaign_id, amount, status, user_id, bill_type, campaign_order_id) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *';
+  const bill = await insertQuery(insertBill, [billDetail.provider, billDetail.campaign_id, billDetail.amount, billDetail.status, billDetail.user_id, billDetail.bill_type, campaign_order.rows[0].id]);
 
-  console.log(bill.rows[0].id.toString());
   const reciever_code = randomUUID();
 
   const auth_response = await axios.post(`${QPAY_BASE_URL}/auth/token`, 
@@ -129,7 +128,7 @@ exports.checkInvoice = async (req, res) => {
                 ]);
                 await pool.query("UPDATE campaign_orders SET payment_status = 'paid' WHERE id = $1", [
                   'paid',
-                  bill.campaign_id
+                  bill.campaign_order_id
                 ]);
               }
               
