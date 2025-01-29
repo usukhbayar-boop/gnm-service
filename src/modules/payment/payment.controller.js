@@ -4,7 +4,7 @@ const { insertQuery, pool } = require('../../config/db');
 const { QPAY_USERNAME, QPAY_PASSWORD, QPAY_BASE_URL } = process.env;
 
 exports.createCampaignOrder = async (req, res) => {
-  const { first_name, last_name, phone, campaign_id, total_amount, description } = req.body;
+  const { first_name, last_name, phone, campaign_id, total_amount, description, email } = req.body;
   const payment_status = "pending";
 
   if (!first_name || !last_name) {
@@ -12,8 +12,8 @@ exports.createCampaignOrder = async (req, res) => {
   }
 
   try {
-    const insertSQL = 'INSERT INTO campaign_orders (first_name, last_name, phone, campaign_id, payment_status, total_amount, description) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *';
-    const campaign = await insertQuery(insertSQL, [first_name, last_name, phone, campaign_id, payment_status, total_amount, description]);
+    const insertSQL = 'INSERT INTO campaign_orders (first_name, last_name, phone, campaign_id, payment_status, total_amount, description, email) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *';
+    const campaign = await insertQuery(insertSQL, [first_name, last_name, phone, campaign_id, payment_status, total_amount, description, email]);
 
     const billDetail = {
       provider: 'qpay',
@@ -132,21 +132,20 @@ exports.checkInvoice = async (req, res) => {
                   bill.campaign_id
                 ]);
               }
-             
+              
               console.log(`bill updated successfully!`);
             } catch (error) {
-              res.status(500).json({ message: error.message });
+              console.error(error);
             }
       }
       res.status(200).json({
-          bill_id: result.rows[0].id,
-          payment_status: check_invoice.data.rows[0] ? check_invoice.data.rows[0].payment_status : 'pending',
-          check_invoice: check_invoice.data.rows
-      });
+        bill_id: result.rows[0].id,
+        payment_status: check_invoice.data.rows[0] ? check_invoice.data.rows[0].payment_status : 'pending',
+        check_invoice: check_invoice.data.rows
+    });
     } else {
         res.status(500).json({ error: 'Bill not found' });
     }
-    
   };
 
 exports.processPayment = (req, res) => {
