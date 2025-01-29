@@ -4,6 +4,7 @@ const cors = require('cors');
 
 const userRoutes = require('./modules/user/user.routes');
 const paymentRoutes = require('./modules/payment/payment.routes');
+const webhookRoutes = require('./modules/webhook/webhook.routes');
 
 const app = express();
 
@@ -14,5 +15,6 @@ app.use(bodyParser.json());
 // Routes
 app.use('/api/users', userRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/webhook', webhookRoutes);
 
 module.exports = app;
