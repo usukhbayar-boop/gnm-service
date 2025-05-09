@@ -57,9 +57,46 @@ const loginWithGoogle = async (req, res) => {
   res.json({ success: true, user: accessData });
 };
 
-const logout = (req, res) => {
-  res.clearCookie("token");
-  res.json({ success: true, message: "Logged out" });
+const updateMember = async (req, res) => {
+  const { user_name, last_name, display_name, phone } = req.body;
+  const updates = [];
+  const values = [];
+  let index = 1;
+
+  if (user_name !== undefined) {
+    updates.push(`user_name = $${index++}`);
+    values.push(user_name);
+  }
+  if (last_name !== undefined) {
+    updates.push(`last_name = $${index++}`);
+    values.push(last_name);
+  }
+  if (display_name !== undefined) {
+    updates.push(`display_name = $${index++}`);
+    values.push(display_name);
+  }
+  if (phone !== undefined) {
+    updates.push(`phone = $${index++}`);
+    values.push(phone);
+  }
+
+  if (updates.length === 0) {
+    return res
+      .status(400)
+      .json({ success: false, message: "No fields to update" });
+  }
+
+  values.push(req.user.id);
+  const query = `UPDATE members SET ${updates.join(", ")} WHERE id = $${index}`;
+  try {
+    await pool.query(query, values);
+    res.json({ success: true });
+  } catch (err) {
+    console.log(err);
+    res
+      .status(401)
+      .json({ success: false, message: "Error while updating member" });
+  }
 };
 
 const getCurrentUser = async (req, res) => {
@@ -88,6 +125,6 @@ const generateAccessToken = async (authInfo) => {
 
 module.exports = {
   loginWithGoogle,
-  logout,
+  updateMember,
   getCurrentUser,
 };

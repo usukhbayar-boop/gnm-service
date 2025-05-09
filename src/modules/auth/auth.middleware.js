@@ -3,7 +3,7 @@ const { redisClient } = require("../../config/redisClient.js");
 
 module.exports = async function authMiddleware(req, res, next) {
   try {
-    const tokenKey = req.headers.authorization?.replace("Bearer ", "");
+    const tokenKey = req.headers["access-token"];
     if (!tokenKey) {
       return res
         .status(401)
