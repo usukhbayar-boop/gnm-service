@@ -1,8 +1,49 @@
 // auth/auth.service.js
-const { OAuth2Client } = require('google-auth-library');
-const { pool } = require('../../config/db');
-
+const { OAuth2Client } = require("google-auth-library");
+const { pool } = require("../../config/db");
+const _ = require("lodash");
+const axios = require("axios");
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+const { GOOGLE_API_URL } = process.env;
+
+function _buildQueryString(params) {
+  const options = { ...params };
+
+  return Object.keys(options)
+    .map((key) => `${key}=${encodeURIComponent(options[key])}`)
+    .join("&");
+}
+
+async function _sendRequest(method, url, body, options) {
+  const qs = _buildQueryString(options);
+  try {
+    const { data } = await axios({
+      method,
+      url: `${GOOGLE_API_URL}${url}?${qs}`,
+      data: method === "post" ? body : undefined,
+    });
+
+    return data;
+  } catch (error) {
+    throw new Error(`${error.message},${JSON.stringify(error.response.data)}`);
+  }
+}
+
+async function fetchUserInformation(access_token) {
+  return await _sendRequest("get", "/oauth2/v2/userinfo", undefined, {
+    access_token,
+  });
+}
+
+async function verifyToken(token) {
+  const client = new OAuth2Client();
+
+  const ticket = await client.verifyIdToken({
+    idToken: token,
+  });
+  return ticket.getPayload();
+}
 
 async function verifyGoogleToken(token) {
   const ticket = await client.verifyIdToken({
@@ -31,7 +72,7 @@ async function findOrCreateUser(googleUser) {
 
 async function findOneByGoogleId(googleId) {
   const result = await pool.query(
-    'SELECT * FROM members WHERE google_id = $1 LIMIT 1',
+    "SELECT * FROM members WHERE google_id = $1 LIMIT 1",
     [googleId]
   );
   return result.rows[0];
@@ -57,10 +98,8 @@ async function createMember(member) {
   return result.rows[0];
 }
 
-
-
-
 module.exports = {
   verifyGoogleToken,
   findOrCreateUser,
+  verifyToken,
 };
