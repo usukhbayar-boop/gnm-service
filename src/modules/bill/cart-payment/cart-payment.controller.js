@@ -40,13 +40,13 @@ exports.linkPaymentCard = async (req, res) => {
         message: "User has already authorized card. First remove current card.",
       });
     }
-    let cardId = currentCard.id;
+    let cardId = currentCard ? currentCard.id : null;
     if (!cardId) {
-      await pool.query(
-        "INSERT INTO billing_cards (user_id, callback_url, provider_uid) VALUES ($1, $2, $3)",
+      const response = await pool.query(
+        "INSERT INTO billing_cards (user_id, callback_url, provider_uid) VALUES ($1, $2, $3) RETURNING *",
         [user_id, callback_url, "golomt_card"]
       );
-      const cardId = result.rows[0].id;
+      cardId = response.rows[0].id;
     }
 
     const refno = randomUUID();
@@ -67,11 +67,12 @@ exports.linkPaymentCard = async (req, res) => {
         message: "Error creating token authorization request.",
       });
     }
+    console.log(cardId);
 
     await pool.query(
       "UPDATE billing_cards SET refno = $1, callback_url = $2, status = $3, check_id = $4, provider_link = $5, provider_response = $6 WHERE id = $7",
       [
-        refno,
+        refno.toString(),
         callback_url,
         "requested",
         response.check_id,
