@@ -39,7 +39,6 @@ const loginWithGoogle = async (req, res) => {
           googleUser.name,
         ]
       );
-      console.log(response);
       authInfo.id = response.rows[0].id;
       authInfo.new_user = true;
     } else {
@@ -75,6 +74,7 @@ const updateMember = async (req, res) => {
     updates.push(`display_name = $${index++}`);
     values.push(display_name);
   }
+
   if (phone !== undefined) {
     updates.push(`phone = $${index++}`);
     values.push(phone);

@@ -84,3 +84,21 @@ exports.linkPaymentCard = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+exports.removePaymentCard = async (req, res) => {
+  // ✅ Ensure functions exist
+  const { user_id } = req.body;
+  try {
+    if (user_id) {
+      await pool.query(
+        "DELETE FROM billing_cards WHERE user_id = $1, status = $2",
+        [user_id, "authorized"]
+      );
+      res.json({ data: { status: "success" } });
+    }
+    res.json({ data: { status: "not_found" } });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: error.message });
+  }
+};
