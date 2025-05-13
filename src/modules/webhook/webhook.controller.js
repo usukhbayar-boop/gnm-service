@@ -14,5 +14,7 @@ exports.qpayWebhook = async (req, res) => {
 exports.golomtCardWebhook = async (req, res) => {
   const { status, refno } = req.query;
   const redirect_url = handleGolomtWebhook(status, refno);
-  res.redirect(redirect_url || "goodneighbors.org.mn");
+  res.redirect(
+    redirect_url || "https://www.goodneighbors.org.mn/profile/donations"
+  );
 };
