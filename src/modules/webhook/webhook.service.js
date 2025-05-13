@@ -2,8 +2,13 @@ const axios = require("axios");
 const { randomUUID } = require("crypto");
 const { insertQuery, pool } = require("../../config/db");
 const {
-  createAuthorization,
+  checkAuthorization,
 } = require("../bill/cart-payment/cart-payment.service");
+const {
+  PAYMENT_CARD_AUTH_WEBHOOK_URL,
+  GOLOMT_ZOCHIL_TOKEN,
+  GOLOMT_ZOCHIL_HMAC_KEY,
+} = process.env;
 
 exports.hookHandler = async (bill_id) => {
   const result = await pool.query(`SELECT * FROM bills WHERE id=${bill_id}`);
@@ -78,33 +83,30 @@ exports.hookHandler = async (bill_id) => {
 
 exports.handleGolomtWebhook = async (status, refno) => {
   if (status && refno) {
+    console.log(refno);
     const result = await pool.query(
       "SELECT * FROM billing_cards WHERE refno = $1",
       [refno]
     );
-    const card = result.length ? result.rows[0] : {};
+    const card = result.rows.length ? result.rows[0] : {};
 
     if (card?.id && card?.status === "requested") {
-      const result = await createAuthorization({
-        redirect_uri: PAYMENT_CARD_AUTH_WEBHOOK_URL,
+      const result = await checkAuthorization({
+        invoiceno: card.refno,
         access_token: GOLOMT_ZOCHIL_TOKEN,
         extra: {
-          returnType: "GET",
-          transactionId: refno,
           hmac_key: GOLOMT_ZOCHIL_HMAC_KEY || "",
         },
       });
+      console.log("resuuuult ", result);
 
       if (result?.success === true && result?.token) {
         await pool.query(
-          "UPDATE billing_cards SET status = $1, card_token = $2, masked_card_number = $3, WHERE id = $4",
+          "UPDATE billing_cards SET status = $1, card_token = $2, masked_card_number = $3 WHERE id = $4",
           ["authorized", result.token, result.masked_card_number, card.id]
         );
       }
-    } else {
-      return res.status(500).json({ message: "Card not found" });
     }
-    console.log(card);
     return card?.callback_url;
   }
 };

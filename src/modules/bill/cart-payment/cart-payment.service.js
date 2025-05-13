@@ -34,6 +34,42 @@ exports.createAuthorization = async ({
   };
 };
 
+exports.checkAuthorization = async ({
+  invoiceno,
+  access_token,
+  extra = {},
+}) => {
+  let success = false;
+  let token = "";
+  let masked_card_number = "";
+
+  const checksum = await _generateChecksum(
+    `${invoiceno}${invoiceno}`,
+    extra.hmac_key
+  );
+
+  try {
+    const response = await _sendRequest(
+      "post",
+      "/api/get/token",
+      access_token,
+      {
+        checksum,
+        transactionId: invoiceno,
+      }
+    );
+    console.log("reeeees=>", response);
+
+    if (response && response.errorCode === "000") {
+      success = true;
+      token = response.token;
+      masked_card_number = response.cardNumber;
+    }
+  } catch {}
+
+  return { success, token, masked_card_number };
+};
+
 const _sendRequest = async (method, url, access_token, data) => {
   const options = {
     method,
@@ -50,6 +86,7 @@ const _sendRequest = async (method, url, access_token, data) => {
 
   try {
     const resp = await axios(options);
+    console.log("fk;ljfslkfjd;ljsf =>", resp);
     return resp.data;
   } catch (err) {
     console.log((err.response || {}).data);

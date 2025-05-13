@@ -34,7 +34,7 @@ exports.linkPaymentCard = async (req, res) => {
       "SELECT * FROM billing_cards WHERE user_id = $1",
       [user_id]
     );
-    const currentCard = result.length ? result.rows[0] : {};
+    const currentCard = result.rows.length ? result.rows[0] : {};
     if (currentCard.status === "authorized") {
       return res.status(400).json({
         message: "User has already authorized card. First remove current card.",
