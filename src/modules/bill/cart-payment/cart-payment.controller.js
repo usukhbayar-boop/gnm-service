@@ -51,7 +51,9 @@ exports.linkPaymentCard = async (req, res) => {
 
     const refno = randomUUID();
     const response = await createAuthorization({
-      redirect_uri: PAYMENT_CARD_AUTH_WEBHOOK_URL,
+      redirect_uri:
+        PAYMENT_CARD_AUTH_WEBHOOK_URL ||
+        "https://api.crosslink.mn/api/webhook/golomt",
       access_token: GOLOMT_ZOCHIL_TOKEN,
       extra: {
         returnType: "GET",
