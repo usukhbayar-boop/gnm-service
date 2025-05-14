@@ -82,31 +82,39 @@ exports.hookHandler = async (bill_id) => {
 };
 
 exports.handleGolomtWebhook = async (status, refno) => {
-  if (status && refno) {
-    console.log(refno);
-    const result = await pool.query(
-      "SELECT * FROM billing_cards WHERE refno = $1",
-      [refno]
-    );
-    const card = result.rows.length ? result.rows[0] : {};
+  try {
+    if (status && refno) {
+      console.log("refno ->", refno);
+      const result = await pool.query(
+        "SELECT * FROM billing_cards WHERE refno = $1",
+        [refno]
+      );
+      const card = result.rows.length ? result.rows[0] : {};
 
-    if (card?.id && card?.status === "requested") {
-      const result = await checkAuthorization({
-        invoiceno: card.refno,
-        access_token: GOLOMT_ZOCHIL_TOKEN,
-        extra: {
-          hmac_key: GOLOMT_ZOCHIL_HMAC_KEY || "",
-        },
-      });
-      console.log("resuuuult ", result);
+      if (card?.id && card?.status === "requested") {
+        const result = await checkAuthorization({
+          invoiceno: card.refno,
+          access_token: GOLOMT_ZOCHIL_TOKEN,
+          extra: {
+            hmac_key: GOLOMT_ZOCHIL_HMAC_KEY || "",
+          },
+        });
+        console.log("resuuuult ", result);
 
-      if (result?.success === true && result?.token) {
-        await pool.query(
-          "UPDATE billing_cards SET status = $1, card_token = $2, masked_card_number = $3 WHERE id = $4",
-          ["authorized", result.token, result.masked_card_number, card.id]
-        );
+        if (result?.success === true && result?.token) {
+          await pool.query(
+            "UPDATE billing_cards SET status = $1, card_token = $2, masked_card_number = $3 WHERE id = $4",
+            ["authorized", result.token, result.masked_card_number, card.id]
+          );
+        }
+      } else {
+        res.status(500).json({ message: "Card not found" });
       }
+      return card?.callback_url;
     }
-    return card?.callback_url;
+  } catch (err) {
+    console.err(err);
   }
+
+  return "";
 };

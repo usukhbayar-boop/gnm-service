@@ -13,7 +13,7 @@ exports.createAuthorization = async ({
     `${extra.transactionId}${extra.returnType}${redirect_uri}`,
     extra.hmac_key
   );
-
+  console.log(`redirect_uri ${redirect_uri}`);
   const response = await _sendRequest(
     "post",
     "/api/confirmation",
@@ -58,7 +58,6 @@ exports.checkAuthorization = async ({
         transactionId: invoiceno,
       }
     );
-    console.log("reeeees=>", response);
 
     if (response && response.errorCode === "000") {
       success = true;
