@@ -86,7 +86,6 @@ const _sendRequest = async (method, url, access_token, data) => {
 
   try {
     const resp = await axios(options);
-    console.log("fk;ljfslkfjd;ljsf =>", resp);
     return resp.data;
   } catch (err) {
     console.log((err.response || {}).data);

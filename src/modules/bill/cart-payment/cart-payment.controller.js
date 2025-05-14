@@ -94,7 +94,7 @@ exports.removePaymentCard = async (req, res) => {
   try {
     if (user_id) {
       await pool.query(
-        "DELETE FROM billing_cards WHERE user_id = $1, status = $2",
+        "DELETE FROM billing_cards WHERE user_id = $1 and status = $2",
         [user_id, "authorized"]
       );
       res.json({ data: { status: "success" } });
