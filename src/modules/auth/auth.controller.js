@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
 const { randomUUID } = require("crypto");
+const moment = require("moment");
 const { insertQuery, pool } = require("../../config/db");
 const authService = require("./auth.service");
 const { redisClient } = require("../../config/redisClient");
@@ -104,7 +105,30 @@ const getCurrentUser = async (req, res) => {
     const result = await pool.query("SELECT * FROM members WHERE id = $1", [
       req.user.id,
     ]);
-    res.json({ success: true, user: result.rows[0] });
+    const membership = await pool.query(
+      `SELECT * FROM billing_cards 
+   WHERE user_id = $1 AND status = 'authorized'
+   ORDER BY created_at DESC 
+   LIMIT 1`,
+      [req.user.id]
+    );
+    let user = result.rows[0];
+    if (membership && membership.rows.length > 0) {
+      const createdAt = moment(membership.rows[0].created_at);
+      const now = moment();
+
+      const monthsAgo = now.diff(createdAt, "months");
+      const yearsAgo = now.diff(createdAt, "years");
+
+      if (yearsAgo >= 2) {
+        user.membership_duration = 24;
+      } else if (monthsAgo >= 12) {
+        user.membership_duration = 12;
+      } else if (monthsAgo >= 6) {
+        user.membership_duration = 6;
+      }
+    }
+    res.json({ success: true, user });
   } catch (err) {
     res.status(401).json({ success: false, message: "Not authenticated" });
   }
