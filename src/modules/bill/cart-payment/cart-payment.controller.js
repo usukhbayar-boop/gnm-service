@@ -7,6 +7,7 @@ const {
 } = process.env;
 const bcrypt = require("bcryptjs");
 const { randomUUID } = require("crypto");
+const sgMail = require("@sendgrid/mail");
 
 exports.listPaymentCards = async (req, res) => {
   // ✅ Ensure function exists
@@ -81,7 +82,30 @@ exports.linkPaymentCard = async (req, res) => {
         cardId,
       ]
     );
-    res.json({ data: { id: cardId, card_gateway_url: response.checkout_url } });
+
+    const user = await pool.query("SELECT * FROM members WHERE id = $1", [
+      user_id,
+    ]);
+    const display_name = user.rows[0].display_name;
+
+    sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+    const msg = {
+      to: "tsolmonsuren.dev@gmail.com", // Change to your recipient
+      from: "info@unisim.mn", // Change to your verified sender
+      subject: "Good Neighbots шинэ гишүүнчлэл",
+      text: `${display_name}  нэртэй гишүүн төлбөрийн картаа холболоо.`,
+      html: `<strong>${display_name}  нэртэй гишүүн төлбөрийн картаа холболоо.</strong>`,
+    };
+    sgMail
+      .send(msg)
+      .then(() => {
+        console.log("Email sent");
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+    res.json({ data: "success" });
+    // res.json({ data: { id: cardId, card_gateway_url: response.checkout_url } });
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: error.message });
