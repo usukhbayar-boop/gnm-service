@@ -104,8 +104,7 @@ exports.linkPaymentCard = async (req, res) => {
       .catch((error) => {
         console.error(error);
       });
-    res.json({ data: "success" });
-    // res.json({ data: { id: cardId, card_gateway_url: response.checkout_url } });
+    res.json({ data: { id: cardId, card_gateway_url: response.checkout_url } });
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: error.message });
