@@ -54,6 +54,30 @@ const loginWithGoogle = async (req, res) => {
     res.status(401).json({ success: false, message: "Authentication failed" });
   }
   const accessData = await generateAccessToken(authInfo);
+  const membership = await pool.query(
+    `SELECT * FROM billing_cards 
+ WHERE user_id = $1 AND status = 'authorized'
+ ORDER BY created_at DESC 
+ LIMIT 1`,
+    [authInfo.id]
+  );
+  if (membership && membership.rows.length > 0) {
+    const createdAt = moment(membership.rows[0].created_at);
+    const now = moment();
+
+    const monthsAgo = now.diff(createdAt, "months");
+    const yearsAgo = now.diff(createdAt, "years");
+
+    accessData.membership_duration = null;
+
+    if (yearsAgo >= 2) {
+      accessData.membership_duration = 24;
+    } else if (monthsAgo >= 12) {
+      accessData.membership_duration = 12;
+    } else if (monthsAgo >= 6) {
+      accessData.membership_duration = 6;
+    }
+  }
   res.json({ success: true, user: accessData });
 };
 
