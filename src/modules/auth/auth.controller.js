@@ -120,6 +120,8 @@ const getCurrentUser = async (req, res) => {
       const monthsAgo = now.diff(createdAt, "months");
       const yearsAgo = now.diff(createdAt, "years");
 
+      user.membership_duration = null;
+
       if (yearsAgo >= 2) {
         user.membership_duration = 24;
       } else if (monthsAgo >= 12) {
