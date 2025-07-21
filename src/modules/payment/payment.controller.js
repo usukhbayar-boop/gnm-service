@@ -12,6 +12,7 @@ exports.createCampaignOrder = async (req, res) => {
     total_amount,
     description,
     email,
+    user_id,
   } = req.body;
   const payment_status = "pending";
 
@@ -21,7 +22,7 @@ exports.createCampaignOrder = async (req, res) => {
 
   try {
     const insertSQL =
-      "INSERT INTO campaign_orders (first_name, last_name, phone, campaign_id, payment_status, total_amount, description, email) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *";
+      "INSERT INTO campaign_orders (first_name, last_name, phone, campaign_id, payment_status, total_amount, description, email, member_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *";
     const campaign_order = await insertQuery(insertSQL, [
       first_name,
       last_name,
@@ -31,6 +32,7 @@ exports.createCampaignOrder = async (req, res) => {
       total_amount,
       description,
       email,
+      user_id,
     ]);
 
     const billDetail = {

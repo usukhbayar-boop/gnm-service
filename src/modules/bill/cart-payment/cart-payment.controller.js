@@ -29,7 +29,7 @@ exports.listPaymentCards = async (req, res) => {
 
 exports.linkPaymentCard = async (req, res) => {
   // ✅ Ensure functions exist
-  const { user_id, callback_url } = req.body;
+  const { user_id, callback_url, amount } = req.body;
   try {
     const result = await pool.query(
       "SELECT * FROM billing_cards WHERE user_id = $1",
@@ -44,8 +44,8 @@ exports.linkPaymentCard = async (req, res) => {
     let cardId = currentCard ? currentCard.id : null;
     if (!cardId) {
       const response = await pool.query(
-        "INSERT INTO billing_cards (user_id, callback_url, provider_uid) VALUES ($1, $2, $3) RETURNING *",
-        [user_id, callback_url, "golomt_card"]
+        "INSERT INTO billing_cards (user_id, callback_url, amount, provider_uid) VALUES ($1, $2, $3, $4) RETURNING *",
+        [user_id, callback_url, amount, "golomt_card"]
       );
       cardId = response.rows[0].id;
     }
